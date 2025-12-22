@@ -11,7 +11,10 @@ class FileProcessor(val options: DuplicateFinderOptions) {
 
     fun fileToChunks(path: Path): List<Chunk> {
         val content = path.readText()
+        return contentToChunks(content, path)
+    }
 
+    fun contentToChunks(content: String, path: Path): List<Chunk> {
         return try {
             val pathFromRoot = options.root.relativize(path)
             val normalize = !options.keepWhitespace

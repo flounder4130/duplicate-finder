@@ -18,6 +18,10 @@ class Index private constructor(val options: DuplicateFinderOptions) {
         fun getInstance(options: DuplicateFinderOptions) = instance ?: synchronized(this) {
             instance ?: Index(options).also { instance = it }
         }
+
+        fun resetInstance() {
+            instance = null
+        }
     }
 
     private val directoryIndex = ConcurrentHashMap<Length, MutableMap<Ngram, MutableList<Chunk>>>()
@@ -25,6 +29,16 @@ class Index private constructor(val options: DuplicateFinderOptions) {
     fun chunksFlat(): List<Chunk> = directoryIndex.values.flatMap { it.values }.flatten().distinct()
 
     fun getForLength(length: Int) = directoryIndex.computeIfAbsent(length) { mutableMapOf<Ngram, MutableList<Chunk>>() }
+
+    fun removeChunksForPath(path: String) {
+        directoryIndex.values.forEach { ngramMap ->
+            synchronized(ngramMap) {
+                ngramMap.values.forEach { chunks ->
+                    chunks.removeIf { it.path == path }
+                }
+            }
+        }
+    }
 
     fun indexDirectory() {
         val (root, _, _, _, _, _, verbose) = options
@@ -37,13 +51,19 @@ class Index private constructor(val options: DuplicateFinderOptions) {
             .forEach { indexFile(it) }
     }
 
-    private fun indexFile(path: Path) {
+    fun indexFile(path: Path) {
         val fileProcessor = FileProcessor(options)
         val chunks = fileProcessor.fileToChunks(path)
         chunks.forEach { indexChunk(it) }
     }
 
-    private fun indexChunk(chunk: Chunk) {
+    fun indexContent(content: String, path: Path) {
+        val fileProcessor = FileProcessor(options)
+        val chunks = fileProcessor.contentToChunks(content, path)
+        chunks.forEach { indexChunk(it) }
+    }
+
+    fun indexChunk(chunk: Chunk) {
         val ngrams = ngramProvider.ngrams(chunk.content)
         val forLength = getForLength(chunk.content.length)
         synchronized (forLength) {

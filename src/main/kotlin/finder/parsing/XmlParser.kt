@@ -5,7 +5,7 @@ import java.io.StringReader
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamConstants
 
-class Tag(val name: String) {
+class Tag(val name: String, val startLine: Int) {
     val contentBuilder = StringBuilder()
 }
 
@@ -27,7 +27,7 @@ class XmlParser(
         while (xmlStreamReader.hasNext()) {
             when (xmlStreamReader.next()) {
                 XMLStreamConstants.START_ELEMENT -> {
-                    val tag = Tag(xmlStreamReader.localName)
+                    val tag = Tag(xmlStreamReader.localName, xmlStreamReader.location.lineNumber)
                     if (!(options.inlineNested || stack.isEmpty())) {
                         stack.last().contentBuilder.append(NESTED_TAG_PLACEHOLDER)
                     }
@@ -52,7 +52,7 @@ class XmlParser(
                         elements.add(
                             Element(
                                 content = tagContent,
-                                lineNumber = xmlStreamReader.location.lineNumber,
+                                lineNumber = tag.startLine,
                                 type = "xml_${tag.name}",
                             )
                         )
