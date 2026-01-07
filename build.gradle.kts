@@ -22,9 +22,9 @@ dependencies {
     implementation("org.commonmark:commonmark:0.22.0")
     implementation("it.unimi.dsi:fastutil:8.2.2")
     implementation("commons-cli:commons-cli:1.5.0")
+    implementation("org.yaml:snakeyaml:2.2")
     implementation(compose.desktop.currentOs)
     implementation(compose.material3)
-
 }
 
 tasks {

@@ -28,9 +28,14 @@ fun indexAndFind(options: DuplicateFinderOptions): DuplicateFinderReport {
 }
 
 fun main(args: Array<String>) {
-    val options = Options().apply{
+    if (args.isEmpty()) {
+        runFromConfig(Path.of(".").toAbsolutePath().normalize())
+        return
+    }
+
+    val options = Options().apply {
         listOf(
-            Option("r", "root", true, "(required) content root path").apply { isRequired = true },
+            Option("r", "root", true, "content root path (uses current directory if not specified)"),
             Option("p", "parser", true, "parser (line, file, xml, md, adoc, properties, auto), default: auto"),
             Option("o", "output", true, "output file path"),
             Option("v", "verbose", false, "print verbose output"),
@@ -48,6 +53,26 @@ fun main(args: Array<String>) {
 
     try {
         val cmd = DefaultParser().parse(options, args)
+
+        val root = if (cmd.hasOption("root")) {
+            Path.of(cmd.getOptionValue("root"))
+        } else {
+            Path.of(".").toAbsolutePath().normalize()
+        }
+
+        val hasConfigOverrides = cmd.hasOption("parser") || cmd.hasOption("minSimilarity") ||
+                cmd.hasOption("minLength") || cmd.hasOption("minDuplicates") ||
+                cmd.hasOption("fileMask") || cmd.hasOption("gram") ||
+                cmd.hasOption("keepWhitespace") || cmd.hasOption("inline")
+
+        if (!hasConfigOverrides) {
+            val configPath = FileConfig.findConfigPath(root)
+            if (configPath != null) {
+                runFromConfig(root, cmd.getOptionValue("output"), cmd.getOptionValue("ui"), cmd.hasOption("verbose"))
+                return
+            }
+        }
+
         val defaults = mapOf(
             "output" to "./duplicate_finder_output",
             "minSimilarity" to "0.9",
@@ -61,7 +86,6 @@ fun main(args: Array<String>) {
 
         fun cmdOrDefault(name: String) = cmd.getOptionValue(name) ?: defaults[name] ?: error("No default")
 
-        val root = Path.of(cmd.getOptionValue("root"))
         val outputPath = Path.of(cmdOrDefault("output"))
         val minSimilarity = cmdOrDefault("minSimilarity").toDouble()
         val minLength = cmdOrDefault("minLength").toInt()
@@ -93,7 +117,7 @@ fun main(args: Array<String>) {
             }
         }
 
-        val options = DuplicateFinderOptions(
+        val finderOptions = DuplicateFinderOptions(
             root,
             minSimilarity,
             minLength.coerceAtLeast(ngramLength),
@@ -108,16 +132,7 @@ fun main(args: Array<String>) {
             inlineNested
         )
 
-        val report = indexAndFind(options)
-        if (verbose) {
-            println("Indexing took: ${report.indexDuration}")
-            println("Analysis took: ${report.analysisDuration}")
-        }
-        printToFiles(report, options)
-        when (ui) {
-            "swing" -> SwingUi(report, options).show()
-            "compose" -> composeUi(report, options)
-        }
+        runWithOptions(finderOptions, ui)
 
     } catch (e: ParseException) {
         println("\n${e.message}\n")
@@ -125,5 +140,43 @@ fun main(args: Array<String>) {
         formatter.printOptions(PrintWriter(System.out, true), 120, options, 0, 5)
         println("\nFor more information, see $DOCUMENTATION_URL\n")
         exitProcess(1)
+    }
+}
+
+private fun runFromConfig(
+    root: Path,
+    outputOverride: String? = null,
+    uiOverride: String? = null,
+    verboseOverride: Boolean = false
+) {
+    val config = FileConfig.load(root) ?: run {
+        System.err.println("""
+            No ${FileConfig.CONFIG_FILE_NAME} found in ${root.toAbsolutePath()}, using defaults.
+            You can specify settings via ${FileConfig.CONFIG_FILE_NAME} or CLI arguments.
+            For more information, see $DOCUMENTATION_URL
+            Analyzing files in ${root.toAbsolutePath()}
+        """.trimIndent()
+        )
+        FileConfig()
+    }
+
+    val outputPath = outputOverride?.let { Path.of(it) }
+    val options = config.toOptions(root, outputPath)
+    val ui = uiOverride ?: "compose"
+    val finalOptions = if (verboseOverride) options.copy(verbose = true) else options
+
+    runWithOptions(finalOptions, ui)
+}
+
+private fun runWithOptions(options: DuplicateFinderOptions, ui: String) {
+    val report = indexAndFind(options)
+    if (options.verbose) {
+        println("Indexing took: ${report.indexDuration}")
+        println("Analysis took: ${report.analysisDuration}")
+    }
+    printToFiles(report, options)
+    when (ui) {
+        "swing" -> SwingUi(report, options).show()
+        "compose" -> composeUi(report, options)
     }
 }
