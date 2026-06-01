@@ -24,7 +24,6 @@ dependencies {
     implementation("commons-cli:commons-cli:1.5.0")
     implementation(compose.desktop.currentOs)
     implementation(compose.material3)
-
 }
 
 tasks {
