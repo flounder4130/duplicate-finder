@@ -17,7 +17,7 @@ private const val DOCUMENTATION_URL = "https://flounder.dev/duplicate-finder/"
 
 fun indexAndFind(options: DuplicateFinderOptions): DuplicateFinderReport {
     val index = Index.getInstance(options)
-    val indexDuration = measureTime { index.indexDirectory() }
+    val indexDuration = measureTime { index.indexDirectory(); index.computeDocFrequencies() }
     val (duplicates, findDuration) = measureTimedValue { findAll(options) }
 
     return DuplicateFinderReport(

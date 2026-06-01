@@ -2,6 +2,7 @@ package finder.indexing
 
 import finder.*
 import finder.ngram.ngramProvider
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import java.nio.file.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -26,7 +27,24 @@ class Index private constructor(val options: DuplicateFinderOptions) {
 
     private val directoryIndex = ConcurrentHashMap<Length, MutableMap<Ngram, MutableList<Chunk>>>()
 
+    @Volatile
+    private var df: Object2IntOpenHashMap<Ngram>? = null
+
     fun chunksFlat(): List<Chunk> = directoryIndex.values.flatMap { it.values }.flatten().distinct()
+
+    fun computeDocFrequencies() {
+        val freq = Object2IntOpenHashMap<Ngram>()
+        directoryIndex.values.forEach { ngramMap ->
+            ngramMap.forEach { (ngram, chunks) -> freq.addTo(ngram, chunks.size) }
+        }
+        df = freq
+        if (options.verbose) println("Computed document frequencies for ${freq.size} distinct trigrams")
+    }
+
+    fun orderByFrequency(ngrams: Set<Ngram>): List<Ngram> {
+        val freq = df ?: return ngrams.toList()
+        return ngrams.sortedBy { freq.getInt(it) }
+    }
 
     fun getForLength(length: Int) = directoryIndex.computeIfAbsent(length) { mutableMapOf<Ngram, MutableList<Chunk>>() }
 

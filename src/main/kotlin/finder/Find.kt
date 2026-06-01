@@ -58,12 +58,13 @@ private fun findForChunk(
 ): List<Chunk> {
     val ngramProvider = ngramProvider(options)
     val thisNgrams = ngramProvider.ngrams(referenceChunk.content)
+    val thisNgramsOrdered = Index.getInstance(options).orderByFrequency(thisNgrams)
     val scores = Object2IntOpenHashMap<Chunk>()
     val minScoreFilter = (thisNgrams.size * options.minSimilarity).toInt()
     var currentMaxScore = 0
 
-    for ((evaluatedNgrams, ngram) in thisNgrams.withIndex()) {
-        val remainingNgrams = thisNgrams.size - evaluatedNgrams
+    for ((evaluatedNgrams, ngram) in thisNgramsOrdered.withIndex()) {
+        val remainingNgrams = thisNgramsOrdered.size - evaluatedNgrams
         val chunksWithNgram = (index[ngram] ?: emptyList())
         for (other in chunksWithNgram) {
             if (other === referenceChunk) continue
@@ -77,7 +78,7 @@ private fun findForChunk(
     val duplicates = buildList {
         scores.object2IntEntrySet().fastForEach { (candidate, score) ->
             if (score < minScoreFilter) return@fastForEach
-            val maxNgrams = max(ngramProvider.ngrams(candidate.content).size, thisNgrams.size)
+            val maxNgrams = max(ngramProvider.ngrams(candidate.content).size, thisNgramsOrdered.size)
             if (similarityRatio(score, maxNgrams) >= options.minSimilarity) {
                 add(candidate)
             }
