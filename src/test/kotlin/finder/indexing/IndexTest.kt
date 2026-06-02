@@ -113,9 +113,7 @@ class IndexTest {
         index.indexChunk(chunk2)
 
         val forLength5 = index.getForLength(5)
-        val chunksForAbc = forLength5["abc"]
-
-        assertEquals(2, chunksForAbc?.size)
+        assertTrue(forLength5.values.any { it.containsAll(listOf(chunk1, chunk2)) })
     }
 
     @Test

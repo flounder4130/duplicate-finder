@@ -1,6 +1,8 @@
 package finder.ngram
 
+import it.unimi.dsi.fastutil.ints.*
+
 interface NgramProvider {
-    fun ngrams(text: String): Set<String>
-    fun ngramsOrdered(text: String): List<String>
+    fun ngrams(text: String): IntSet
+    fun ngramsOrdered(text: String): IntList
 }

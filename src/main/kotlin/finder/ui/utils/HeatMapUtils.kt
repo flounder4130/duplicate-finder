@@ -1,6 +1,6 @@
 package finder.ui.utils
 
-import finder.DuplicateFinderOptions
+import finder.*
 import finder.indexing.Chunk
 import finder.ngram.ngramProvider
 import kotlin.collections.forEach
@@ -11,14 +11,14 @@ fun charScores(
     duplicates: List<Chunk>
 ): Array<Float> {
     val ngramProvider = ngramProvider(options)
-    val ngramsOccurrences = mutableMapOf<String, Int>()
+    val ngramsOccurrences = mutableMapOf<Int, Int>()
     duplicates.forEach { duplicate ->
         ngramProvider.ngrams(duplicate.content).forEach { ngram ->
             ngramsOccurrences[ngram] = (ngramsOccurrences[ngram] ?: 0) + 1
         }
     }
 
-    val charScores = Array<Int>(reference.content.length) { 0 }
+    val charScores = Array(reference.content.length) { 0 }
     val referenceNgrams = ngramProvider.ngramsOrdered(reference.content)
     referenceNgrams.forEachIndexed { offset, ngram ->
         val ngramScore = ngramsOccurrences[ngram] ?: return@forEachIndexed
@@ -35,7 +35,7 @@ fun charScoresFloat(
     numDuplicates: Int,
     ngramLength: Int
 ): Array<Float> {
-    val floats = Array<Float>(scores.size) { 0f }
+    val floats = Array(scores.size) { 0f }
 
     var left = 0
     var right = scores.size - 1

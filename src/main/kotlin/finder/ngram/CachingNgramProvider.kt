@@ -1,7 +1,7 @@
 package finder.ngram
 
 import finder.Length
-import finder.Ngram
+import it.unimi.dsi.fastutil.ints.*
 import java.util.concurrent.ConcurrentHashMap
 
 class CachingNgramProvider private constructor(ngramLength: Length) : NgramProvider {
@@ -14,9 +14,9 @@ class CachingNgramProvider private constructor(ngramLength: Length) : NgramProvi
         }
     }
 
-    private val cache = ConcurrentHashMap<String, Set<Ngram>>()
+    private val cache = ConcurrentHashMap<String, IntSet>()
     private val computeProvider = ComputeNgramProvider.getInstance(ngramLength)
 
-    override fun ngrams(text: String): Set<String> = cache.getOrPut(text) { computeProvider.ngrams(text) }
-    override fun ngramsOrdered(text: String): List<String> = computeProvider.ngramsOrdered(text)
+    override fun ngrams(text: String): IntSet = cache.getOrPut(text) { computeProvider.ngrams(text) }
+    override fun ngramsOrdered(text: String): IntList = computeProvider.ngramsOrdered(text)
 }

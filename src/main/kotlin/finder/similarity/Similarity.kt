@@ -1,11 +1,11 @@
 package finder.similarity
 
-import finder.DuplicateFinderOptions
+import finder.*
 import finder.indexing.Chunk
 import finder.ngram.ngramProvider
 import kotlin.math.max
 
-fun similarityRatio(ngramsLeft: Set<String>, ngramsRight: Set<String>): Double {
+fun similarityRatio(ngramsLeft: Set<Int>, ngramsRight: Set<Int>): Double {
     val intersection = ngramsLeft.intersect(ngramsRight)
     val max = max(ngramsLeft.size, ngramsRight.size)
     return similarityRatio(intersection.size, max)

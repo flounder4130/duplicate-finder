@@ -1,6 +1,7 @@
 package finder.ngram
 
 import finder.Length
+import it.unimi.dsi.fastutil.ints.*
 
 class ComputeNgramProvider private constructor(private val ngramLength: Int) : NgramProvider {
 
@@ -13,18 +14,27 @@ class ComputeNgramProvider private constructor(private val ngramLength: Int) : N
         }
     }
 
-    override fun ngrams(text: String) = text.toNgramsCollection(ngramLength, mutableSetOf())
-    override fun ngramsOrdered(text: String) = text.toNgramsCollection(ngramLength, mutableListOf())
+    override fun ngrams(text: String): IntSet {
+        val set = IntOpenHashSet()
+        text.forEachNgram(ngramLength) { set.add(it) }
+        return set
+    }
+
+    override fun ngramsOrdered(text: String): IntList {
+        val list = IntArrayList()
+        text.forEachNgram(ngramLength) { list.add(it) }
+        return list
+    }
 }
 
-private fun <T : MutableCollection<String>> String.toNgramsCollection(ngramLength: Int, collection: T): T {
+private inline fun String.forEachNgram(ngramLength: Int, consume: (Int) -> Unit) {
     if (this.length >= ngramLength) {
         for (i in 0..this.length - ngramLength) {
-            val gram = this.substring(i, i + ngramLength)
-            collection.add(gram)
+            var h = 0
+            for (j in 0 until ngramLength) h = h * 31 + this[i + j].code
+            consume(h)
         }
     }
-    return collection
 }
 
 

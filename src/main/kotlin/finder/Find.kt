@@ -3,6 +3,7 @@ package finder
 import finder.ngram.ngramProvider
 import finder.indexing.*
 import finder.similarity.similarityRatio
+import it.unimi.dsi.fastutil.ints.*
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
@@ -54,8 +55,8 @@ fun findForChunk(
 
 private fun findForChunk(
     referenceChunk: Chunk,
-    thisNgrams: List<Ngram>,
-    index: Map<Ngram, List<Chunk>>,
+    thisNgrams: IntList,
+    index: Int2ObjectOpenHashMap<MutableList<Chunk>>,
     options: DuplicateFinderOptions
 ): List<Chunk> {
     val ngramProvider = ngramProvider(options)
@@ -63,9 +64,10 @@ private fun findForChunk(
     val minScoreFilter = (thisNgrams.size * options.minSimilarity).toInt()
     var currentMaxScore = 0
 
-    for ((evaluatedNgrams, ngram) in thisNgrams.withIndex()) {
+    for (evaluatedNgrams in thisNgrams.indices) {
+        val ngram = thisNgrams.getInt(evaluatedNgrams)
         val remainingNgrams = thisNgrams.size - evaluatedNgrams
-        val chunksWithNgram = (index[ngram] ?: emptyList())
+        val chunksWithNgram = index.get(ngram) ?: emptyList()
         for (other in chunksWithNgram) {
             if (other === referenceChunk) continue
             val score = scores.getInt(other) + 1

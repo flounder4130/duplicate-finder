@@ -10,16 +10,21 @@ val twoNgram = ngramProvider.ngrams("1234")
 val threeNgram = ngramProvider.ngrams("12345")
 
 class NgramsKtTest {
+    private fun trigram(s: String) = ngramProvider.ngrams(s)
+
     @Test
     fun ngramsTest() {
         assert(oneNgram.size == 1)
-        assert(oneNgram.contains("123"))
-        
+        assert(oneNgram.containsAll(trigram("123")))
+
         assert(twoNgram.size == 2)
-        assert(twoNgram.containsAll(listOf("123", "234")))
-        
+        assert(twoNgram.containsAll(trigram("123")))
+        assert(twoNgram.containsAll(trigram("234")))
+
         assert(threeNgram.size == 3)
-        assert(threeNgram.containsAll(listOf("123", "234", "345")))
+        assert(threeNgram.containsAll(trigram("123")))
+        assert(threeNgram.containsAll(trigram("234")))
+        assert(threeNgram.containsAll(trigram("345")))
     }
 
     @Test

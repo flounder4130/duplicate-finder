@@ -2,7 +2,7 @@ package finder.indexing
 
 import finder.*
 import finder.ngram.ngramProvider
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import it.unimi.dsi.fastutil.ints.*
 import java.nio.file.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -25,28 +25,31 @@ class Index private constructor(val options: DuplicateFinderOptions) {
         }
     }
 
-    private val directoryIndex = ConcurrentHashMap<Length, MutableMap<Ngram, MutableList<Chunk>>>()
+    private val directoryIndex = ConcurrentHashMap<Length, Int2ObjectOpenHashMap<MutableList<Chunk>>>()
 
     @Volatile
-    private var df: Object2IntOpenHashMap<Ngram>? = null
+    private var df: Int2IntOpenHashMap? = null
 
     fun chunksFlat(): List<Chunk> = directoryIndex.values.flatMap { it.values }.flatten().distinct()
 
     fun computeDocFrequencies() {
-        val freq = Object2IntOpenHashMap<Ngram>()
+        val freq = Int2IntOpenHashMap()
         directoryIndex.values.forEach { ngramMap ->
-            ngramMap.forEach { (ngram, chunks) -> freq.addTo(ngram, chunks.size) }
+            ngramMap.int2ObjectEntrySet().forEach { freq.addTo(it.intKey, it.value.size) }
         }
         df = freq
         if (options.verbose) println("Computed document frequencies for ${freq.size} distinct trigrams")
     }
 
-    fun orderByFrequency(ngrams: Set<Ngram>): List<Ngram> {
-        val freq = df ?: return ngrams.toList()
-        return ngrams.sortedBy { freq.getInt(it) }
+    fun orderByFrequency(ngrams: IntSet): IntList {
+        val arr = ngrams.toIntArray()
+        val freq = df ?: return IntArrayList.wrap(arr)
+        IntArrays.quickSort(arr) { a, b -> freq.get(a) - freq.get(b) }
+        return IntArrayList.wrap(arr)
     }
 
-    fun getForLength(length: Int) = directoryIndex.computeIfAbsent(length) { mutableMapOf<Ngram, MutableList<Chunk>>() }
+    fun getForLength(length: Int): Int2ObjectOpenHashMap<MutableList<Chunk>> =
+        directoryIndex.computeIfAbsent(length) { Int2ObjectOpenHashMap<MutableList<Chunk>>() }
 
     fun removeChunksForPath(path: String) {
         directoryIndex.values.forEach { ngramMap ->
@@ -85,8 +88,14 @@ class Index private constructor(val options: DuplicateFinderOptions) {
         val ngrams = ngramProvider.ngrams(chunk.content)
         val forLength = getForLength(chunk.content.length)
         synchronized (forLength) {
-            ngrams.forEach { ngram ->
-                val forNgram = forLength.computeIfAbsent(ngram) { mutableListOf() }
+            val it = ngrams.iterator()
+            while (it.hasNext()) {
+                val ngram = it.nextInt()
+                var forNgram = forLength.get(ngram)
+                if (forNgram == null) {
+                    forNgram = mutableListOf()
+                    forLength.put(ngram, forNgram)
+                }
                 forNgram.add(chunk)
             }
         }
