@@ -31,7 +31,7 @@ data class FileConfig(
     val output: String = "./duplicate_finder_output",
     val ui: String = "compose",
     val verbose: Boolean = false,
-    val lowMemory: Boolean = false,
+    val cacheNgrams: Boolean = false,
     val keepWhitespace: Boolean = false,
     val inlineNested: Boolean = false,
 ) {
@@ -57,7 +57,7 @@ data class FileConfig(
             fileMask = fileMask,
             parserType = parserType,
             verbose = verbose,
-            lowMemory = lowMemory,
+            cacheNgrams = cacheNgrams,
             ngramLength = ngramLength,
             outputDirectory = outputOverride ?: Path.of(output),
             keepWhitespace = keepWhitespace,
@@ -95,7 +95,7 @@ data class FileConfig(
                 output = props["output"] ?: defaults.output,
                 ui = props["ui"] ?: defaults.ui,
                 verbose = props["verbose"]?.toBooleanStrictOrNull() ?: defaults.verbose,
-                lowMemory = props["memory"]?.toBooleanStrictOrNull() ?: defaults.lowMemory,
+                cacheNgrams = props["cache"]?.toBooleanStrictOrNull() ?: defaults.cacheNgrams,
                 keepWhitespace = props["keepWhitespace"]?.toBooleanStrictOrNull() ?: defaults.keepWhitespace,
                 inlineNested = props["inline"]?.toBooleanStrictOrNull() ?: defaults.inlineNested,
             )

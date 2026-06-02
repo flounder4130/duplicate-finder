@@ -44,7 +44,7 @@ fun main(args: Array<String>) {
             Option("d", "minDuplicates", true, "minimum duplicates"),
             Option("f", "fileMask", true, "file mask"),
             Option("ui", "ui", true, "UI to use (swing, compose, none), default: compose"),
-            Option("m", "memory", false, "run in low-memory mode"),
+            Option("c", "cache", false, "cache trigrams (more memory; usually slower)"),
             Option("g", "gram", false, "ngram length"),
             Option("w", "keepWhitespace", false, "parse without normalizing whitespace"),
             Option("i", "inline", false, "inline nested content in the enclosing elements"),
@@ -93,7 +93,7 @@ fun main(args: Array<String>) {
         val fileMask = cmdOrDefault("fileMask").split(",").filter { it.isNotEmpty() }.toSet()
         val verbose = cmd.hasOption("verbose")
         val ui = cmdOrDefault("ui")
-        val lowMemory = cmd.hasOption("memory")
+        val cacheNgrams = cmd.hasOption("cache")
         val keepWhitespace = cmd.hasOption("keepWhitespace")
         val parserOption = cmdOrDefault("parser")
         val ngramLength = cmdOrDefault("gram").toInt()
@@ -125,7 +125,7 @@ fun main(args: Array<String>) {
             fileMask,
             parser,
             verbose,
-            lowMemory,
+            cacheNgrams,
             ngramLength,
             outputPath,
             keepWhitespace,

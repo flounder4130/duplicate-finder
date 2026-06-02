@@ -12,7 +12,7 @@ data class DuplicateFinderOptions(
     val fileMask: Set<String>,
     val parserType: ParserType,
     val verbose: Boolean,
-    val lowMemory: Boolean,
+    val cacheNgrams: Boolean,
     val ngramLength: Int,
     val outputDirectory: Path,
     val keepWhitespace: Boolean,

@@ -38,7 +38,6 @@ fun Toolbar() {
         var showFuzzySearchDialog by remember { mutableStateOf(false) }
         Button(
             onClick = { showFuzzySearchDialog = true },
-            enabled = !options.lowMemory
         ) {
             Text("Fuzzy search")
         }
