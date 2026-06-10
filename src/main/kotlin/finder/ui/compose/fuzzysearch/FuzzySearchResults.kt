@@ -42,7 +42,7 @@ fun ColumnScope.FuzzySearchResults(
                 val similarity = chunk.similarity(queryChunk, options)
 
                 Text(
-                    text = "${(similarity).toInt()}% ${chunk.preview}",
+                    text = "$similarity% ${chunk.preview}",
                     fontSize = fontSize,
                     modifier = Modifier
                         .padding(vertical = 4.dp)

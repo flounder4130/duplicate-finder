@@ -32,7 +32,7 @@ fun printToFiles(
                 duplicateChunksInfo(referenceChunk, duplicateChunks, options)
             }
 
-            outputFile.writeText(content.toString())
+            outputFile.writeText(content)
         }
 }
 
