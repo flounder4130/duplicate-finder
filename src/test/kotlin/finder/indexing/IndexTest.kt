@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 class IndexTest {
 
     private fun chunkOf(content: String, path: String = "", lineNumber: Int = 0) =
-        Chunk(content, path, lineNumber, "")
+        LineChunk(content, path, LineCoordinates(lineNumber))
 
     @BeforeEach
     @AfterEach

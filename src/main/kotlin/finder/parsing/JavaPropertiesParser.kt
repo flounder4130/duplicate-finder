@@ -1,7 +1,9 @@
 package finder.parsing
 
+import finder.indexing.*
+
 class JavaPropertiesParser : ContentParser() {
-    override fun parse(content: String): List<Element> = content.lines()
+    override fun parse(content: String, path: String) = content.lines()
         .mapIndexed { index, line ->
             Pair(index + 1, line.trim())
         }
@@ -12,7 +14,7 @@ class JavaPropertiesParser : ContentParser() {
             val separatorIndex = line.indexOf('=')
             if (separatorIndex > 0) {
                 val value = line.substring(separatorIndex + 1).trim()
-                Element(value, lineNumber, "java_property")
+                PropertiesChunk(value, path, LineCoordinates(lineNumber))
             } else null
         }
 }

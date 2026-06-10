@@ -10,9 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.*
 import finder.findForChunk
-import finder.indexing.Chunk
-import finder.ui.compose.LocalFontSize
-import finder.ui.compose.LocalOptions
+import finder.indexing.*
+import finder.ui.compose.*
 
 @Composable
 fun ColumnScope.FuzzySearchQuery(
@@ -58,7 +57,7 @@ fun ColumnScope.FuzzySearchQuery(
         Button(
             onClick = {
                 if (queryText.value.isNotEmpty()) {
-                    val searchChunk = Chunk(queryText.value, "", 0, "")
+                    val searchChunk = LineChunk(queryText.value, "", LineCoordinates(0))
                     results.value = findForChunk(
                         searchChunk,
                         options.withMinSimilarity(minSimilarity.value)

@@ -1,19 +1,16 @@
 package finder.indexing
 
-import finder.parsing.Element
-import java.nio.file.Path
-
-class Chunk(
-    val content: String,
+abstract class Chunk(
+    var content: String,
     val path: String,
-    val lineNumber: Int,
-    val type: String,
 ) {
+    abstract val coordinates: Coordinates
+
     val preview: String
         get() = if (content.length > 15) "$this – ${content.substring(0, 15)}..." else "$this – $content"
 
     override fun toString(): String {
-        return "$path:$lineNumber"
+        return "$path:$coordinates"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -22,7 +19,7 @@ class Chunk(
 
         other as Chunk
 
-        if (lineNumber != other.lineNumber) return false
+        if (coordinates != other.coordinates) return false
         if (path != other.path) return false
 
         return true
@@ -30,11 +27,7 @@ class Chunk(
 
     override fun hashCode(): Int {
         var result = path.hashCode()
-        result = 31 * result + lineNumber
+        result = 31 * result + coordinates.hashCode()
         return result
-    }
-
-    companion object {
-        fun of(element: Element, pathFromRoot: Path) = Chunk(element.content, pathFromRoot.toString(), element.lineNumber, element.type)
     }
 }

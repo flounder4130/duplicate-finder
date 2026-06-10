@@ -18,7 +18,7 @@ fun printToFiles(
         .forEach { (referenceChunk, duplicateChunks) ->
             val fileName =
                 "${referenceChunk.path.replace("/", "-").replace("\\", "")}_" +
-                        "${referenceChunk.lineNumber}_" +
+                        "${referenceChunk.coordinates}_" +
                         "${duplicateChunks.size}.txt"
 
             val outputFile = options.outputDirectory.resolve(fileName)
@@ -37,7 +37,7 @@ fun printToFiles(
 }
 
 private fun StringBuilder.referenceChunkHeader() = appendLine("Reference chunk:").appendBlankLine()
-private fun StringBuilder.referenceChunkInfo(referenceChunk: Chunk) = appendLine("${referenceChunk.path} ${referenceChunk.lineNumber}").appendBlankLine()
+private fun StringBuilder.referenceChunkInfo(referenceChunk: Chunk) = appendLine("${referenceChunk.path} ${referenceChunk.coordinates}").appendBlankLine()
 private fun StringBuilder.referenceChunkContent(referenceChunk: Chunk) = appendLine(referenceChunk.content.trim()).appendBlankLine()
 private fun StringBuilder.separator() = appendLine("====================").appendBlankLine()
 private fun StringBuilder.duplicateChunksHeader() = appendLine("Duplicate chunks:").appendBlankLine()
@@ -47,6 +47,6 @@ private fun StringBuilder.duplicateChunksInfo(rChunk: Chunk, dChunks: List<Chunk
         append(
             "${dChunk.similarity(rChunk, opts)}% " +
                     "${dChunk.path} " +
-                    "${dChunk.lineNumber}\n"
+                    "${dChunk.coordinates}\n"
         )
     }

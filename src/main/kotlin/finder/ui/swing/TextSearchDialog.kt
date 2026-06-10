@@ -1,7 +1,7 @@
 package finder.ui.swing
 
 import finder.*
-import finder.indexing.Chunk
+import finder.indexing.*
 import finder.similarity.similarity
 import java.awt.*
 import java.awt.event.*
@@ -107,7 +107,7 @@ class TextSearchDialog(
     }
 }
 
-private fun String.toChunk() = Chunk(this, "", 0, "")
+private fun String.toChunk() = LineChunk(this, "", LineCoordinates(0))
 
 private fun JTextPane.resetStyleOnFocus() = addFocusListener(object : FocusListener {
     override fun focusGained(e: FocusEvent?) {

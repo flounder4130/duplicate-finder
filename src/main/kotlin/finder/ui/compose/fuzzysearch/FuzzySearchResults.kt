@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.unit.dp
 import finder.DuplicateFinderOptions
-import finder.indexing.Chunk
+import finder.indexing.*
 import finder.similarity.similarity
 import finder.ui.compose.*
 
@@ -37,7 +37,7 @@ fun ColumnScope.FuzzySearchResults(
             modifier = Modifier.border(1.dp, Color.Gray)
                 .padding(8.dp)
         ) {
-            val queryChunk = Chunk(queryText, "", 0, "")
+            val queryChunk = LineChunk(queryText, "", LineCoordinates(0))
             items(results) { chunk ->
                 val similarity = chunk.similarity(queryChunk, options)
 
@@ -63,4 +63,3 @@ fun ColumnScope.FuzzySearchResults(
         selectedResult.value?.let { ResultPreview(it) }
     }
 }
-

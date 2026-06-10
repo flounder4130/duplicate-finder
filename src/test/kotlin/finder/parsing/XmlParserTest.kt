@@ -1,5 +1,6 @@
 package finder.parsing
 
+import finder.indexing.XmlChunk
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.test.Test
@@ -13,19 +14,12 @@ class XmlParserTest {
 
     @Test
     fun xmlParserTest() {
-        val result = XmlParser(inlineNested = false).parse(Path.of("src/test/resources/test-document.xml").readText())
+        val result = XmlParser(inlineNested = false).parse(Path.of("src/test/resources/test-document.xml").readText(), "test-document.xml")
 
         assertEquals(ELEMENTS_COUNT, result.size, "Should have parsed $ELEMENTS_COUNT chunks from the xml file")
 
-        println("[DEBUG_LOG] Parsed chunks:")
-        result.forEach { chunk ->
-            println("[DEBUG_LOG]   ${chunk.type}: '${chunk.content}'")
-        }
-
-        val types = result.map { it.type }.toSet()
-        println("[DEBUG_LOG] Found types: $types")
+        val tags = result.filterIsInstance<XmlChunk>().map { it.tagName }.toSet()
         val contents = result.map { it.content }
-        println("[DEBUG_LOG] Found contents: $contents")
         
         
         assertTrue(contents.any { it.contains("Dangling text within a doc") }, "Should parse dangling text within a document")
@@ -50,11 +44,11 @@ class XmlParserTest {
         assertTrue(contents.any { it.contains("List item 3") }, "Should parse list item 3")
         assertTrue(contents.any { it.contains("List item 4") }, "Should parse list item 4")
         assertTrue(contents.any { it.contains("List item 5 with") }, "Should parse list item 5")
-        assertTrue(types.contains("xml_p"), "Should include parsed paragraphs")
-        assertTrue(types.contains("xml_chapter"), "Should include parsed chapter")
-        assertTrue(types.contains("xml_li"), "Should include parsed list items")
+        assertTrue(tags.contains("p"), "Should include parsed paragraphs")
+        assertTrue(tags.contains("chapter"), "Should include parsed chapter")
+        assertTrue(tags.contains("li"), "Should include parsed list items")
 
-        assertFalse(types.contains("xml_list"), "Should not include list because it doesn't have own text content")
+        assertFalse(tags.contains("list"), "Should not include list because it doesn't have own text content")
 
         
     }

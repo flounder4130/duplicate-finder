@@ -1,5 +1,6 @@
 package finder.parsing
 
+import finder.indexing.*
 import java.io.StringReader
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamConstants
@@ -14,13 +15,13 @@ class XmlParser(
     private val inlineNested: Boolean,
     val skipTags: List<String> = emptyList(),
 ) : ContentParser() {
-    override fun parse(content: String): List<Element> {
+    override fun parse(content: String, path: String): List<Chunk> {
         val xmlStreamReader = XMLInputFactory.newInstance().apply {
             setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)
             setProperty(XMLInputFactory.SUPPORT_DTD, false)
         }.createXMLStreamReader(StringReader(content))
 
-        val elements = mutableListOf<Element>()
+        val chunks = mutableListOf<Chunk>()
         val stack = ArrayDeque<Tag>()
 
         while (xmlStreamReader.hasNext()) {
@@ -48,18 +49,12 @@ class XmlParser(
                         && tag.name !in skipTags
                     ) {
                         val tagContent = tag.contentBuilder.toString().trim()
-                        elements.add(
-                            Element(
-                                content = tagContent,
-                                lineNumber = tag.startLine,
-                                type = "xml_${tag.name}",
-                            )
-                        )
+                        chunks.add(XmlChunk(tagContent, path, LineCoordinates(tag.startLine), tag.name))
                     }
                 }
             }
         }
 
-        return elements
+        return chunks
     }
 }

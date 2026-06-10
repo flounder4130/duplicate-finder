@@ -1,5 +1,5 @@
 package finder
 
-import finder.indexing.Chunk
+import finder.indexing.*
 
-fun mockChunkOf(text: String) = Chunk(text, "", 0, "")
+fun mockChunkOf(text: String) = LineChunk(text, "", LineCoordinates(0))

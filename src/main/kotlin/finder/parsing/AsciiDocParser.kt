@@ -1,17 +1,20 @@
 package finder.parsing
 
+import finder.indexing.*
+
 class AsciiDocParser : ContentParser() {
 
-    override fun parse(content: String): List<Element> {
+    override fun parse(content: String, path: String): List<Chunk> {
         val lines = content.lines()
-        val elements = mutableListOf<Element>()
+        val chunks = mutableListOf<Chunk>()
         var currentBlock = mutableListOf<Pair<String, Int>>()
         var inCodeBlock = false
         var inTable = false
         var tableHeader = true
         var skipUntilLine = -1  // Track which lines to skip for multi-line table rows
 
-        fun addBlock(content: String, startLine: Int, type: String) = elements.add(Element(content, startLine, type))
+        fun addBlock(content: String, startLine: Int, blockType: String): Boolean =
+            chunks.add(AsciiDocChunk(content, path, LineCoordinates(startLine), blockType))
 
         fun processCurrentBlock() {
             if (currentBlock.isEmpty()) return
@@ -23,22 +26,22 @@ class AsciiDocParser : ContentParser() {
                     content.startsWith("= ") -> {
                         // Extract only the first line as the document title
                         val title = content.removePrefix("= ").lines().first().trim()
-                        addBlock(title, startLine, "adoc_section_0")
+                        addBlock(title, startLine, "section_0")
 
                         // Process remaining lines as a separate paragraph if they exist
                         val remainingLines = content.lines().drop(1).joinToString("\n").trim()
                         if (remainingLines.isNotEmpty()) {
-                            addBlock(remainingLines, startLine + 1, "adoc_metadata")
+                            addBlock(remainingLines, startLine + 1, "metadata")
                         }
                     }
-                    content.startsWith("== ") -> addBlock(content.removePrefix("== ").trim(), startLine, "adoc_section_1")
-                    content.startsWith("=== ") -> addBlock(content.removePrefix("=== ").trim(), startLine, "adoc_section_2")
-                    content.startsWith("==== ") -> addBlock(content.removePrefix("==== ").trim(), startLine, "adoc_section_3")
+                    content.startsWith("== ") -> addBlock(content.removePrefix("== ").trim(), startLine, "section_1")
+                    content.startsWith("=== ") -> addBlock(content.removePrefix("=== ").trim(), startLine, "section_2")
+                    content.startsWith("==== ") -> addBlock(content.removePrefix("==== ").trim(), startLine, "section_3")
                     content.startsWith("* ") || content.startsWith("** ") -> {
                         content.lines().forEachIndexed { index, line ->
                             val itemContent = line.trim().removePrefix("*").removePrefix("*").trim()
                             if (itemContent.isNotEmpty()) {
-                                addBlock(itemContent, startLine + index, "adoc_list_item")
+                                addBlock(itemContent, startLine + index, "list_item")
                             }
                         }
                     }
@@ -52,13 +55,13 @@ class AsciiDocParser : ContentParser() {
                             if (line.trim().startsWith("* ")) {
                                 // If we have accumulated paragraph content, add it first
                                 if (currentParagraph.isNotEmpty()) {
-                                    addBlock(currentParagraph.joinToString("\n"), currentLineNumber, "adoc_paragraph")
+                                    addBlock(currentParagraph.joinToString("\n"), currentLineNumber, "paragraph")
                                     currentParagraph.clear()
                                 }
                                 // Add the list item
                                 val itemContent = line.trim().removePrefix("*").trim()
                                 if (itemContent.isNotEmpty()) {
-                                    addBlock(itemContent, currentLineNumber, "adoc_list_item")
+                                    addBlock(itemContent, currentLineNumber, "list_item")
                                 }
                             } else {
                                 currentParagraph.add(line)
@@ -68,7 +71,7 @@ class AsciiDocParser : ContentParser() {
 
                         // Add any remaining paragraph content
                         if (currentParagraph.isNotEmpty()) {
-                            addBlock(currentParagraph.joinToString("\n"), startLine, "adoc_paragraph")
+                            addBlock(currentParagraph.joinToString("\n"), startLine, "paragraph")
                         }
                     }
                 }
@@ -80,7 +83,7 @@ class AsciiDocParser : ContentParser() {
             when {
                 line.startsWith(".") -> {
                     processCurrentBlock()
-                    addBlock(line.removePrefix(".").trim(), lineNumber + 1, "adoc_table_title")
+                    addBlock(line.removePrefix(".").trim(), lineNumber + 1, "table_title")
                 }
                 line == "|===" -> {
                     processCurrentBlock()
@@ -91,7 +94,7 @@ class AsciiDocParser : ContentParser() {
                     if (inCodeBlock) {
                         val codeContent = currentBlock.joinToString("\n") { it.first }
                         if (codeContent.isNotEmpty()) {
-                            addBlock(codeContent, currentBlock.first().second, "adoc_listing")
+                            addBlock(codeContent, currentBlock.first().second, "listing")
                         }
                         currentBlock.clear()
                     }
@@ -104,7 +107,7 @@ class AsciiDocParser : ContentParser() {
                             .split("|")
                             .filter { it.isNotEmpty() }
                             .joinToString(" | ") { it.trim() }
-                        addBlock(headerContent, lineNumber + 1, "adoc_table_header")
+                        addBlock(headerContent, lineNumber + 1, "table_header")
                         tableHeader = false
                     } else if (line.startsWith("|")) {
                         // Skip table boundary markers and already processed lines
@@ -129,7 +132,7 @@ class AsciiDocParser : ContentParser() {
                             }
 
                             if (cells.isNotEmpty()) {
-                                addBlock(cells.joinToString(" | "), lineNumber + 1, "adoc_table_row")
+                                addBlock(cells.joinToString(" | "), lineNumber + 1, "table_row")
                                 // Set the skip line to after the last processed line
                                 skipUntilLine = currentLineIndex + 1
                             }
@@ -146,6 +149,6 @@ class AsciiDocParser : ContentParser() {
         }
 
         processCurrentBlock()
-        return elements
+        return chunks
     }
 }

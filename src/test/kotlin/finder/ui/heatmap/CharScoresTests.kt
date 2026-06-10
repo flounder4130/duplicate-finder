@@ -2,7 +2,7 @@ package finder.ui.heatmap
 
 import finder.mockChunkOf
 import finder.mockOptionsForNgramLength
-import finder.indexing.Chunk
+import finder.indexing.*
 import finder.ui.utils.charScores
 import org.junit.jupiter.api.Test
 
@@ -44,8 +44,8 @@ class CharScoresTests {
 
     @Test
     fun evenOdd() {
-        val odd = Chunk("123", "", 0, "")
-        val even = Chunk("1234", "", 0, "")
+        val odd = LineChunk("123", "", LineCoordinates(0))
+        val even = LineChunk("1234", "", LineCoordinates(0))
         assert(
             charScores(
                 reference = odd,
@@ -93,8 +93,8 @@ class CharScoresTests {
 
     @Test
     fun halfMatches() {
-        val match = Chunk("123", "", 0, "")
-        val different = Chunk("456", "", 0, "")
+        val match = LineChunk("123", "", LineCoordinates(0))
+        val different = LineChunk("456", "", LineCoordinates(0))
         assert(
             charScores(
                 reference = match,
