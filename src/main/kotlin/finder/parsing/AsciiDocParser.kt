@@ -1,8 +1,6 @@
 package finder.parsing
 
-import finder.DuplicateFinderOptions
-
-class AsciiDocParser(options: DuplicateFinderOptions): ContentParser(options) {
+class AsciiDocParser : ContentParser() {
 
     override fun parse(content: String): List<Element> {
         val lines = content.lines()

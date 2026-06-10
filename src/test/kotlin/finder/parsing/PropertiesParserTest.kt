@@ -1,6 +1,5 @@
 package finder.parsing
 
-import finder.mockOptions
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.test.Test
@@ -12,8 +11,7 @@ class PropertiesParserTest {
 
     @Test
     fun javaPropertiesParserTest() {
-        val options = mockOptions()
-        val result = JavaPropertiesParser(options).parse(Path.of("src/test/resources/test.properties").readText())
+        val result = JavaPropertiesParser().parse(Path.of("src/test/resources/test.properties").readText())
 
         println("[DEBUG_LOG] Parsed chunks:")
         result.forEach { chunk ->

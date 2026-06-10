@@ -1,8 +1,6 @@
 package finder.parsing
 
-import finder.DuplicateFinderOptions
-
-class JavaPropertiesParser(options: DuplicateFinderOptions) : ContentParser(options) {
+class JavaPropertiesParser : ContentParser() {
     override fun parse(content: String): List<Element> = content.lines()
         .mapIndexed { index, line ->
             Pair(index + 1, line.trim())

@@ -60,5 +60,3 @@ private fun checkExistsAndEmpty(path: Path) {
         error("Directory not empty. Double-check and delete the contents manually: $path")
     }
 }
-
-

@@ -1,6 +1,5 @@
 package finder.parsing
 
-import finder.DuplicateFinderOptions
 import java.io.StringReader
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamConstants
@@ -12,9 +11,9 @@ class Tag(val name: String, val startLine: Int) {
 private const val NESTED_TAG_PLACEHOLDER = "</>"
 
 class XmlParser(
-    options: DuplicateFinderOptions,
+    private val inlineNested: Boolean,
     val skipTags: List<String> = emptyList(),
-) : ContentParser(options) {
+) : ContentParser() {
     override fun parse(content: String): List<Element> {
         val xmlStreamReader = XMLInputFactory.newInstance().apply {
             setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)
@@ -28,14 +27,14 @@ class XmlParser(
             when (xmlStreamReader.next()) {
                 XMLStreamConstants.START_ELEMENT -> {
                     val tag = Tag(xmlStreamReader.localName, xmlStreamReader.location.lineNumber)
-                    if (!(options.inlineNested || stack.isEmpty())) {
+                    if (!(inlineNested || stack.isEmpty())) {
                         stack.last().contentBuilder.append(NESTED_TAG_PLACEHOLDER)
                     }
                     stack.addLast(tag)
                 }
 
                 XMLStreamConstants.CHARACTERS -> {
-                    if (options.inlineNested) {
+                    if (inlineNested) {
                         stack.forEach { it.contentBuilder.append(xmlStreamReader.text) }
                     } else {
                         stack.last().contentBuilder.append(xmlStreamReader.text)

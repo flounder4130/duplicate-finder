@@ -1,6 +1,5 @@
 package finder.parsing
 
-import finder.mockOptions
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 import kotlin.io.path.readText
@@ -9,8 +8,7 @@ import kotlin.test.assertTrue
 class AsciiDocParserTest {
     @Test
     fun `test parsing sample asciidoc file`() {
-        val options = mockOptions()
-        val result = AsciiDocParser(options).parse(Path.of("src/test/resources/test-document.adoc").readText())
+        val result = AsciiDocParser().parse(Path.of("src/test/resources/test-document.adoc").readText())
 
         assertTrue(result.isNotEmpty(), "Should have parsed some content from the AsciiDoc file")
 

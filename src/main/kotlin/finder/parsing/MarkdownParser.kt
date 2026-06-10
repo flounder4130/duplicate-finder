@@ -1,11 +1,10 @@
 package finder.parsing
 
-import finder.*
 import org.commonmark.node.*
 import org.commonmark.parser.*
 import org.commonmark.renderer.text.TextContentRenderer
 
-class MarkdownParser(options: DuplicateFinderOptions): ContentParser(options) {
+class MarkdownParser : ContentParser() {
 
     override fun parse(content: String): List<Element> {
         val document = Parser

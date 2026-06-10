@@ -1,8 +1,6 @@
 package finder.parsing
 
-import finder.*
-
-class LineParser(options: DuplicateFinderOptions): ContentParser(options) {
+class LineParser : ContentParser() {
 
     override fun parse(content: String) = content.lines()
         .withIndex()

@@ -1,6 +1,5 @@
 package finder.parsing
 
-import finder.mockOptions
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.test.Test
@@ -14,8 +13,7 @@ class XmlParserTest {
 
     @Test
     fun xmlParserTest() {
-        val options = mockOptions()
-        val result = XmlParser(options).parse(Path.of("src/test/resources/test-document.xml").readText())
+        val result = XmlParser(inlineNested = false).parse(Path.of("src/test/resources/test-document.xml").readText())
 
         assertEquals(ELEMENTS_COUNT, result.size, "Should have parsed $ELEMENTS_COUNT chunks from the xml file")
 
