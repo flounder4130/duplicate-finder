@@ -2,7 +2,7 @@ package finder
 
 import finder.output.printToFiles
 import finder.indexing.Index
-import finder.parsing.ParserType
+import finder.parsing.*
 import finder.ui.swing.SwingUi
 import finder.ui.compose.composeUi
 import java.nio.file.*
@@ -10,8 +10,7 @@ import kotlin.collections.*
 import org.apache.commons.cli.*
 import java.io.PrintWriter
 import kotlin.system.exitProcess
-import kotlin.time.measureTime
-import kotlin.time.measureTimedValue
+import kotlin.time.*
 
 private const val DOCUMENTATION_URL = "https://flounder.dev/duplicate-finder/"
 
@@ -36,13 +35,12 @@ fun main(args: Array<String>) {
     val options = Options().apply {
         listOf(
             Option("r", "root", true, "content root path (uses current directory if not specified)"),
-            Option("p", "parser", true, "parser (line, file, xml, md, adoc, properties, auto), default: auto"),
             Option("o", "output", true, "output file path"),
             Option("v", "verbose", false, "print verbose output"),
             Option("s", "minSimilarity", true, "minimum similarity"),
             Option("l", "minLength", true, "minimum length"),
             Option("d", "minDuplicates", true, "minimum duplicates"),
-            Option("f", "fileMask", true, "file mask"),
+            Option("f", "fileMask", true, "file mask: comma-separated extension:parser; for example 'xml,md', 'topic:xml,md:md'; '*' matches any extension, for example '*:line'. Default: ${FileMask.defaultsDescription}"),
             Option("ui", "ui", true, "UI to use (swing, compose, none), default: compose"),
             Option("c", "cache", false, "cache trigrams (more memory; usually slower)"),
             Option("g", "gram", false, "ngram length"),
@@ -60,7 +58,7 @@ fun main(args: Array<String>) {
             Path.of(".").toAbsolutePath().normalize()
         }
 
-        val hasConfigOverrides = cmd.hasOption("parser") || cmd.hasOption("minSimilarity") ||
+        val hasConfigOverrides = cmd.hasOption("minSimilarity") ||
                 cmd.hasOption("minLength") || cmd.hasOption("minDuplicates") ||
                 cmd.hasOption("fileMask") || cmd.hasOption("gram") ||
                 cmd.hasOption("keepWhitespace") || cmd.hasOption("inline")
@@ -79,7 +77,6 @@ fun main(args: Array<String>) {
             "minLength" to "100",
             "minDuplicates" to "1",
             "fileMask" to "",
-            "parser" to "auto",
             "gram" to "3",
             "ui" to "compose",
         )
@@ -90,32 +87,13 @@ fun main(args: Array<String>) {
         val minSimilarity = cmdOrDefault("minSimilarity").toDouble()
         val minLength = cmdOrDefault("minLength").toInt()
         val minDuplicates = cmdOrDefault("minDuplicates").toInt()
-        val fileMask = cmdOrDefault("fileMask").split(",").filter { it.isNotEmpty() }.toSet()
         val verbose = cmd.hasOption("verbose")
         val ui = cmdOrDefault("ui")
         val cacheNgrams = cmd.hasOption("cache")
         val keepWhitespace = cmd.hasOption("keepWhitespace")
-        val parserOption = cmdOrDefault("parser")
         val ngramLength = cmdOrDefault("gram").toInt()
         val inlineNested = cmd.hasOption("inline")
-
-        val availableParsers = setOf("line", "file", "xml", "md", "adoc", "properties", "auto")
-        require(parserOption in availableParsers) {
-            "Invalid parser: $parserOption. Allowed values are: $availableParsers"
-        }
-        val parser = when (parserOption) {
-            "line" -> ParserType.LINE
-            "file" -> ParserType.FILE
-            "xml" -> ParserType.XML
-            "md" -> ParserType.MARKDOWN
-            "adoc" -> ParserType.ASCIIDOC
-            "properties" -> ParserType.PROPERTIES
-            "auto" -> ParserType.AUTO
-            else -> {
-                System.err.println("Unsupported parser: $parserOption, defaulting to 'auto'")
-                ParserType.AUTO
-            }
-        }
+        val fileMask = FileMask.resolve(cmdOrDefault("fileMask"))
 
         val finderOptions = DuplicateFinderOptions(
             root,
@@ -123,7 +101,6 @@ fun main(args: Array<String>) {
             minLength.coerceAtLeast(ngramLength),
             minDuplicates,
             fileMask,
-            parser,
             verbose,
             cacheNgrams,
             ngramLength,

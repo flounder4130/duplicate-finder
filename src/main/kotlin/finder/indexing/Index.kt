@@ -62,7 +62,7 @@ class Index private constructor(val options: DuplicateFinderOptions) {
     }
 
     fun indexDirectory() {
-        val (root, _, _, _, _, _, verbose) = options
+        val (root, _, _, _, _, verbose) = options
         val fileCount = AtomicInteger(0)
         val filesToIndex = filesToIndex(root, options)
         if (verbose) println("Indexing ${filesToIndex.size} files")

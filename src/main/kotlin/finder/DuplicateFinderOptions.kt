@@ -1,6 +1,6 @@
 package finder
 
-import finder.parsing.ParserType
+import finder.parsing.*
 import java.nio.file.Path
 import kotlin.io.path.extension
 
@@ -9,8 +9,7 @@ data class DuplicateFinderOptions(
     val minSimilarity: Double,
     val minLength: Int,
     val minDuplicates: Int,
-    val fileMask: Set<String>,
-    val parserType: ParserType,
+    val fileMask: Map<String, ParserType>,
     val verbose: Boolean,
     val cacheNgrams: Boolean,
     val ngramLength: Int,
@@ -18,11 +17,9 @@ data class DuplicateFinderOptions(
     val keepWhitespace: Boolean,
     val inlineNested: Boolean
 ) {
-    fun fileMaskIncludes(path: Path) = fileMask.isEmpty() || path.extension in fileMask
+    fun fileMaskIncludes(path: Path) = path.extension in fileMask || FileMask.WILDCARD in fileMask
 
-    fun fileMaskIncludesOnly(extension: String) = fileMask.size == 1 && fileMask.single() == extension
-
-    fun fileMaskIsSubsetOf(extensions: Set<String>) = (fileMask - extensions).isEmpty()
+    fun parserFor(path: Path): ParserType = fileMask[path.extension] ?: fileMask.getValue(FileMask.WILDCARD)
 
     fun withMinSimilarity(d: Double): DuplicateFinderOptions = copy(minSimilarity = d)
 }

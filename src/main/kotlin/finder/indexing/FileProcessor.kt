@@ -1,13 +1,11 @@
 package finder.indexing
 
 import finder.*
-import finder.parsing.Element
-import finder.parsing.parser
+import finder.parsing.*
 import java.nio.file.Path
 import kotlin.io.path.readText
 
 class FileProcessor(val options: DuplicateFinderOptions) {
-    val parser = parser(options)
 
     fun fileToChunks(path: Path): List<Chunk> {
         val content = path.readText()
@@ -18,7 +16,7 @@ class FileProcessor(val options: DuplicateFinderOptions) {
         return try {
             val pathFromRoot = options.root.relativize(path)
             val normalize = !options.keepWhitespace
-            parser.parse(content)
+            parser(options, path).parse(content)
                 .map { if (normalize) normalizeWhitespace(it) else it }
                 .filter { it.content.length >= options.minLength }
                 .map { Chunk.of(it, pathFromRoot) }

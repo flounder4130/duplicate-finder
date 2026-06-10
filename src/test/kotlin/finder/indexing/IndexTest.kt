@@ -1,10 +1,8 @@
 package finder.indexing
 
-import finder.mockOptions
-import finder.mockOptionsForNgramLength
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import finder.*
+import finder.parsing.ParserType
+import org.junit.jupiter.api.*
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
@@ -126,7 +124,7 @@ class IndexTest {
             Files.writeString(file2, "another file content")
 
             resetSingleton()
-            val options = mockOptions().copy(root = tempDir, fileMask = setOf("txt"))
+            val options = mockOptions().copy(root = tempDir, fileMask = mapOf("txt" to ParserType.FILE))
             val index = Index.getInstance(options)
             index.indexDirectory()
 
@@ -149,7 +147,7 @@ class IndexTest {
             Files.writeString(file2, "markdown content")
 
             resetSingleton()
-            val options = mockOptions().copy(root = tempDir, fileMask = setOf("txt"))
+            val options = mockOptions().copy(root = tempDir, fileMask = mapOf("txt" to ParserType.FILE))
             val index = Index.getInstance(options)
             index.indexDirectory()
 
