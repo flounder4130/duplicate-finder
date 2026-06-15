@@ -16,7 +16,8 @@ val PREFERRED_DIALOG_SIZE = Dimension(1000, 900)
 class TextSearchDialog(
     parent: JFrame,
     fontSize: Int,
-    private val options: DuplicateFinderOptions
+    private val options: DuplicateFinderOptions,
+    private val index: Index,
 ) : JDialog(parent, "Text search", true) {
 
     private val queryPane = JTextPane().apply {
@@ -98,7 +99,7 @@ class TextSearchDialog(
 
     private fun refresh() {
         val searchChunk = queryPane.text.toChunk()
-        val results = findForChunk(searchChunk, options.withMinSimilarity(similaritySlider.value / 100.0))
+        val results = findForChunk(searchChunk, index, options.withMinSimilarity(similaritySlider.value / 100.0))
         queryPane.document = heatMapDocument(searchChunk, results, options)
         resultsListModel.clear()
         resultsListModel.addAll(results)

@@ -14,30 +14,16 @@ class IndexTest {
     private fun chunkOf(content: String, path: String = "", lineNumber: Int = 0) =
         LineChunk(content, path, LineCoordinates(lineNumber))
 
-    @BeforeEach
-    @AfterEach
-    fun resetSingleton() {
-        Index.resetInstance()
-    }
-
-    @Test
-    fun `getInstance returns same instance for same options`() {
-        val options = mockOptions()
-        val index1 = Index.getInstance(options)
-        val index2 = Index.getInstance(options)
-        assertSame(index1, index2)
-    }
-
     @Test
     fun `getForLength returns empty map for new length`() {
-        val index = Index.getInstance(mockOptions())
+        val index = Index(mockOptions())
         val forLength = index.getForLength(10)
         assertTrue(forLength.isEmpty())
     }
 
     @Test
     fun `getForLength returns same map for same length`() {
-        val index = Index.getInstance(mockOptions())
+        val index = Index(mockOptions())
         val forLength1 = index.getForLength(10)
         val forLength2 = index.getForLength(10)
         assertSame(forLength1, forLength2)
@@ -45,14 +31,14 @@ class IndexTest {
 
     @Test
     fun `chunksFlat returns empty list for empty index`() {
-        val index = Index.getInstance(mockOptions())
+        val index = Index(mockOptions())
         assertTrue(index.chunksFlat().isEmpty())
     }
 
     @Test
     fun `chunksFlat returns distinct chunks after indexing`() {
         val options = mockOptionsForNgramLength(3)
-        val index = Index.getInstance(options)
+        val index = Index(options)
 
         val chunk1 = chunkOf("hello world", "file1.txt", 1)
         val chunk2 = chunkOf("another text", "file2.txt", 1)
@@ -69,7 +55,7 @@ class IndexTest {
     @Test
     fun `indexing chunks with same length groups them correctly`() {
         val options = mockOptionsForNgramLength(3)
-        val index = Index.getInstance(options)
+        val index = Index(options)
 
         val chunk1 = chunkOf("12345", "file1.txt", 1)
         val chunk2 = chunkOf("abcde", "file2.txt", 1)
@@ -84,7 +70,7 @@ class IndexTest {
     @Test
     fun `indexing chunks with different lengths creates separate buckets`() {
         val options = mockOptionsForNgramLength(3)
-        val index = Index.getInstance(options)
+        val index = Index(options)
 
         val chunk1 = chunkOf("12345", "file1.txt", 1)
         val chunk2 = chunkOf("1234567", "file2.txt", 1)
@@ -102,7 +88,7 @@ class IndexTest {
     @Test
     fun `chunks with common ngrams are grouped together`() {
         val options = mockOptionsForNgramLength(3)
-        val index = Index.getInstance(options)
+        val index = Index(options)
 
         val chunk1 = chunkOf("abcde", "file1.txt", 1)
         val chunk2 = chunkOf("abcxy", "file2.txt", 1)
@@ -123,9 +109,8 @@ class IndexTest {
             Files.writeString(file1, "hello world content")
             Files.writeString(file2, "another file content")
 
-            resetSingleton()
             val options = mockOptions().copy(root = tempDir, fileMask = mapOf("txt" to ParserType.FILE))
-            val index = Index.getInstance(options)
+            val index = Index(options)
             index.indexDirectory()
 
             val chunks = index.chunksFlat()
@@ -146,9 +131,8 @@ class IndexTest {
             Files.writeString(file1, "hello world content")
             Files.writeString(file2, "markdown content")
 
-            resetSingleton()
             val options = mockOptions().copy(root = tempDir, fileMask = mapOf("txt" to ParserType.FILE))
-            val index = Index.getInstance(options)
+            val index = Index(options)
             index.indexDirectory()
 
             val chunks = index.chunksFlat()
@@ -163,7 +147,7 @@ class IndexTest {
     @Test
     fun `removeChunksForPath removes all chunks with specified path`() {
         val options = mockOptionsForNgramLength(3)
-        val index = Index.getInstance(options)
+        val index = Index(options)
 
         val chunk1 = chunkOf("hello world", "file1.txt", 1)
         val chunk2 = chunkOf("hello there", "file1.txt", 2)
@@ -185,7 +169,7 @@ class IndexTest {
     @Test
     fun `removeChunksForPath does nothing when path not found`() {
         val options = mockOptionsForNgramLength(3)
-        val index = Index.getInstance(options)
+        val index = Index(options)
 
         val chunk1 = chunkOf("hello world", "file1.txt", 1)
         index.indexChunk(chunk1)
@@ -198,7 +182,7 @@ class IndexTest {
     @Test
     fun `removeChunksForPath removes chunks from multiple length buckets`() {
         val options = mockOptionsForNgramLength(3)
-        val index = Index.getInstance(options)
+        val index = Index(options)
 
         val chunk1 = chunkOf("short", "file1.txt", 1)
         val chunk2 = chunkOf("much longer text", "file1.txt", 2)

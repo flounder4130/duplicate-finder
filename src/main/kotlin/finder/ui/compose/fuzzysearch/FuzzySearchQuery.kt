@@ -21,6 +21,7 @@ fun ColumnScope.FuzzySearchQuery(
 ) {
     val fontSize = LocalFontSize.current.value.size.sp
     val options = LocalOptions.current.value
+    val index = LocalIndex.current
 
     Text(
         "Fuzzy Search",
@@ -60,6 +61,7 @@ fun ColumnScope.FuzzySearchQuery(
                     val searchChunk = LineChunk(queryText.value, "", LineCoordinates(0))
                     results.value = findForChunk(
                         searchChunk,
+                        index,
                         options.withMinSimilarity(minSimilarity.value)
                     )
                 }

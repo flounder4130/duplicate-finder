@@ -1,7 +1,7 @@
 package finder.ui.swing
 
 import finder.*
-import finder.indexing.Chunk
+import finder.indexing.*
 import finder.similarity.similarity
 import finder.ui.sort.SortBy
 import java.awt.*
@@ -12,7 +12,8 @@ val MONOSPACE_FONT = Font("Monospaced", Font.PLAIN, DEFAULT_FONT_SIZE)
 
 class SwingUi(
     val report: DuplicateFinderReport,
-    val options: DuplicateFinderOptions
+    val options: DuplicateFinderOptions,
+    val index: Index,
 ) {
     val listsData = ListsData(report.duplicates, options)
 
@@ -115,7 +116,7 @@ class SwingUi(
 
         val textSearchButton = JButton("Text search").apply {
             toolTipText = "Fuzzy search based on text query"
-            addActionListener { TextSearchDialog(frame, fontSizeSlider.value, options).isVisible = true }
+            addActionListener { TextSearchDialog(frame, fontSizeSlider.value, options, index).isVisible = true }
         }
 
         add(sortByLabel, toolbarPosition(0))

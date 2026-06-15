@@ -8,9 +8,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import finder.*
+import finder.indexing.Index
 import finder.ui.compose.toolbar.Toolbar
 
-fun composeUi(report: DuplicateFinderReport, options: DuplicateFinderOptions) = application {
+fun composeUi(report: DuplicateFinderReport, options: DuplicateFinderOptions, index: Index) = application {
 
     val windowState = rememberWindowState(
         width = 1200.dp,
@@ -24,6 +25,7 @@ fun composeUi(report: DuplicateFinderReport, options: DuplicateFinderOptions) = 
     ) {
 
         LocalOptions = compositionLocalOf { mutableStateOf(options) }
+        LocalIndex = compositionLocalOf { index }
 
         MaterialTheme {
             Column {

@@ -8,22 +8,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.isRegularFile
 
-class Index private constructor(val options: DuplicateFinderOptions) {
+class Index(val options: DuplicateFinderOptions) {
 
     val ngramProvider = ngramProvider(options)
-
-    companion object {
-        @Volatile
-        private var instance: Index? = null
-
-        fun getInstance(options: DuplicateFinderOptions) = instance ?: synchronized(this) {
-            instance ?: Index(options).also { instance = it }
-        }
-
-        fun resetInstance() {
-            instance = null
-        }
-    }
 
     private val directoryIndex = ConcurrentHashMap<Length, Int2ObjectOpenHashMap<MutableList<Chunk>>>()
 

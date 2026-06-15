@@ -14,16 +14,20 @@ import kotlin.time.*
 
 private const val DOCUMENTATION_URL = "https://flounder.dev/duplicate-finder/"
 
-fun indexAndFind(options: DuplicateFinderOptions): DuplicateFinderReport {
-    val index = Index.getInstance(options)
-    val indexDuration = measureTime { index.indexDirectory(); index.computeDocFrequencies() }
-    val (duplicates, findDuration) = measureTimedValue { findAll(options) }
+class DuplicateFinder(private val options: DuplicateFinderOptions) {
 
-    return DuplicateFinderReport(
-        duplicates,
-        indexDuration,
-        findDuration
-    )
+    val index = Index(options)
+
+    fun run(): DuplicateFinderReport {
+        val indexDuration = measureTime { index.indexDirectory(); index.computeDocFrequencies() }
+        val (duplicates, findDuration) = measureTimedValue { findAll(index) }
+
+        return DuplicateFinderReport(
+            duplicates,
+            indexDuration,
+            findDuration
+        )
+    }
 }
 
 fun main(args: Array<String>) {
@@ -146,14 +150,15 @@ private fun runFromConfig(
 }
 
 private fun runWithOptions(options: DuplicateFinderOptions, ui: String) {
-    val report = indexAndFind(options)
+    val finder = DuplicateFinder(options)
+    val report = finder.run()
     if (options.verbose) {
         println("Indexing took: ${report.indexDuration}")
         println("Analysis took: ${report.analysisDuration}")
     }
     printToFiles(report, options)
     when (ui) {
-        "swing" -> SwingUi(report, options).show()
-        "compose" -> composeUi(report, options)
+        "swing" -> SwingUi(report, options, finder.index).show()
+        "compose" -> composeUi(report, options, finder.index)
     }
 }
