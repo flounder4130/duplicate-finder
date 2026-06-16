@@ -3,21 +3,49 @@ package finder.indexing
 import finder.*
 import finder.ngram.ngramProvider
 import it.unimi.dsi.fastutil.ints.*
+import it.unimi.dsi.fastutil.objects.*
 import java.nio.file.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.IntPredicate
 import kotlin.io.path.isRegularFile
 
 class Index(val options: DuplicateFinderOptions) {
 
     val ngramProvider = ngramProvider(options)
 
-    private val directoryIndex = ConcurrentHashMap<Length, Int2ObjectOpenHashMap<MutableList<Chunk>>>()
+    private val directoryIndex = ConcurrentHashMap<Length, Int2ObjectOpenHashMap<IntArrayList>>()
+
+    private val registry = ObjectArrayList<Chunk>()
+    private val chunkIds = Object2IntOpenHashMap<Chunk>().apply { defaultReturnValue(-1) }
 
     @Volatile
     private var df: Int2IntOpenHashMap? = null
 
-    fun chunksFlat(): List<Chunk> = directoryIndex.values.flatMap { it.values }.flatten().distinct()
+    fun chunkForId(id: Int): Chunk = registry.get(id)
+
+    fun chunkId(chunk: Chunk): Int = chunkIds.getInt(chunk)
+
+    private fun idForChunk(chunk: Chunk): Int = synchronized(registry) {
+        var id = chunkIds.getInt(chunk)
+        if (id < 0) {
+            id = registry.size
+            registry.add(chunk)
+            chunkIds.put(chunk, id)
+        }
+        id
+    }
+
+    fun chunksFlat(): List<Chunk> {
+        val ids = IntOpenHashSet()
+        directoryIndex.values.forEach { ngramMap ->
+            ngramMap.values.forEach { posting -> ids.addAll(posting) }
+        }
+        val result = ArrayList<Chunk>(ids.size)
+        val it = ids.iterator()
+        while (it.hasNext()) result.add(registry.get(it.nextInt()))
+        return result
+    }
 
     fun computeDocFrequencies() {
         val freq = Int2IntOpenHashMap()
@@ -35,14 +63,14 @@ class Index(val options: DuplicateFinderOptions) {
         return IntArrayList.wrap(arr)
     }
 
-    fun getForLength(length: Int): Int2ObjectOpenHashMap<MutableList<Chunk>> =
-        directoryIndex.computeIfAbsent(length) { Int2ObjectOpenHashMap<MutableList<Chunk>>() }
+    fun getForLength(length: Int): Int2ObjectOpenHashMap<IntArrayList> =
+        directoryIndex.computeIfAbsent(length) { Int2ObjectOpenHashMap<IntArrayList>() }
 
     fun removeChunksForPath(path: String) {
         directoryIndex.values.forEach { ngramMap ->
             synchronized(ngramMap) {
-                ngramMap.values.forEach { chunks ->
-                    chunks.removeIf { it.path == path }
+                ngramMap.values.forEach { ids ->
+                    ids.removeIf(IntPredicate { id -> registry.get(id).path == path })
                 }
             }
         }
@@ -73,6 +101,7 @@ class Index(val options: DuplicateFinderOptions) {
 
     fun indexChunk(chunk: Chunk) {
         val ngrams = ngramProvider.ngrams(chunk.content)
+        val id = idForChunk(chunk)
         val forLength = getForLength(chunk.content.length)
         synchronized (forLength) {
             val it = ngrams.iterator()
@@ -80,10 +109,10 @@ class Index(val options: DuplicateFinderOptions) {
                 val ngram = it.nextInt()
                 var forNgram = forLength.get(ngram)
                 if (forNgram == null) {
-                    forNgram = mutableListOf()
+                    forNgram = IntArrayList()
                     forLength.put(ngram, forNgram)
                 }
-                forNgram.add(chunk)
+                forNgram.add(id)
             }
         }
     }

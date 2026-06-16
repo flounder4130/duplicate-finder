@@ -3,7 +3,6 @@ package finder
 import finder.indexing.*
 import finder.similarity.similarityRatio
 import it.unimi.dsi.fastutil.ints.*
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -52,31 +51,38 @@ fun findForChunk(
 private fun findForChunk(
     referenceChunk: Chunk,
     thisNgrams: IntList,
-    ngramBucket: Int2ObjectOpenHashMap<MutableList<Chunk>>,
+    ngramBucket: Int2ObjectOpenHashMap<IntArrayList>,
     index: Index,
     options: DuplicateFinderOptions
 ): List<Chunk> {
     val ngramProvider = index.ngramProvider
-    val scores = Object2IntOpenHashMap<Chunk>()
+    val scores = Int2IntOpenHashMap()
     val minScoreFilter = (thisNgrams.size * options.minSimilarity).toInt()
     var currentMaxScore = 0
+    val referenceId = index.chunkId(referenceChunk)
 
     for (evaluatedNgrams in thisNgrams.indices) {
         val ngram = thisNgrams.getInt(evaluatedNgrams)
         val remainingNgrams = thisNgrams.size - evaluatedNgrams
-        val chunksWithNgram = ngramBucket.get(ngram) ?: emptyList()
-        for (other in chunksWithNgram) {
-            if (other === referenceChunk) continue
-            val score = scores.getInt(other) + 1
-            scores.put(other, score)
-            currentMaxScore = max(score, currentMaxScore)
+        val idsWithNgram = ngramBucket.get(ngram)
+        if (idsWithNgram != null) {
+            val ids = idsWithNgram.elements()
+            val count = idsWithNgram.size
+            for (i in 0 until count) {
+                val id = ids[i]
+                if (id == referenceId) continue
+                val score = scores.addTo(id, 1) + 1
+                currentMaxScore = max(score, currentMaxScore)
+            }
         }
         if (currentMaxScore + remainingNgrams < minScoreFilter) return emptyList()
     }
 
     val duplicates = buildList {
-        scores.object2IntEntrySet().fastForEach { (candidate, score) ->
+        scores.int2IntEntrySet().fastForEach { entry ->
+            val score = entry.intValue
             if (score < minScoreFilter) return@fastForEach
+            val candidate = index.chunkForId(entry.intKey)
             val maxNgrams = max(ngramProvider.ngrams(candidate.content).size, thisNgrams.size)
             if (similarityRatio(score, maxNgrams) >= options.minSimilarity) {
                 add(candidate)

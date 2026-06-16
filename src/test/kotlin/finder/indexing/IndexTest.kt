@@ -97,7 +97,9 @@ class IndexTest {
         index.indexChunk(chunk2)
 
         val forLength5 = index.getForLength(5)
-        assertTrue(forLength5.values.any { it.containsAll(listOf(chunk1, chunk2)) })
+        val id1 = index.chunkId(chunk1)
+        val id2 = index.chunkId(chunk2)
+        assertTrue(forLength5.values.any { it.contains(id1) && it.contains(id2) })
     }
 
     @Test
