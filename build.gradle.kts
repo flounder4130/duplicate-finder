@@ -20,7 +20,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("org.commonmark:commonmark:0.22.0")
-    implementation("it.unimi.dsi:fastutil:8.2.2")
+    implementation("it.unimi.dsi:fastutil:8.5.15")
     implementation("commons-cli:commons-cli:1.5.0")
     implementation(compose.desktop.currentOs)
     implementation(compose.material3)
