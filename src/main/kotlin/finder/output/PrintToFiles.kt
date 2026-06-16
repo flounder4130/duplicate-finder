@@ -43,10 +43,17 @@ private fun StringBuilder.separator() = appendLine("====================").appen
 private fun StringBuilder.duplicateChunksHeader() = appendLine("Duplicate chunks:").appendBlankLine()
 private fun StringBuilder.appendBlankLine() = appendLine("\n")
 private fun StringBuilder.duplicateChunksInfo(rChunk: Chunk, dChunks: List<Chunk>, opts: DuplicateFinderOptions) =
-    dChunks.forEach { dChunk ->
-        append(
-            "${dChunk.similarity(rChunk, opts)}% " +
-                    "${dChunk.path} " +
-                    "${dChunk.coordinates}\n"
+    dChunks
+        .map { it to it.similarity(rChunk, opts) }
+        .sortedWith(
+            compareByDescending<Pair<Chunk, Int>> { it.second }
+                .thenBy { it.first.path }
+                .thenBy { it.first.coordinates.toString() }
         )
-    }
+        .forEach { (dChunk, similarity) ->
+            append(
+                "$similarity% " +
+                        "${dChunk.path} " +
+                        "${dChunk.coordinates}\n"
+            )
+        }
