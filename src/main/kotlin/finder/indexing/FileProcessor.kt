@@ -5,6 +5,8 @@ import finder.parsing.parser
 import java.nio.file.Path
 import kotlin.io.path.readText
 
+private val WHITESPACE_REGEX = Regex("\\s+")
+
 class FileProcessor(val options: DuplicateFinderOptions) {
 
     fun fileToChunks(path: Path): List<Chunk> {
@@ -25,5 +27,5 @@ class FileProcessor(val options: DuplicateFinderOptions) {
         }
     }
 
-    private fun normalizeWhitespace(content: String) = content.replace(Regex("\\s+"), " ").trim()
+    private fun normalizeWhitespace(content: String) = content.replace(WHITESPACE_REGEX, " ").trim()
 }
