@@ -57,6 +57,14 @@ class Index(val options: DuplicateFinderOptions) {
         if (options.verbose) println("Computed document frequencies for ${freq.size} distinct trigrams")
     }
 
+    fun trim() {
+        directoryIndex.values.forEach { ngramMap ->
+            ngramMap.values.forEach { posting -> posting.trim() }
+            ngramMap.trim()
+        }
+        df?.trim()
+    }
+
     fun orderByFrequency(ngrams: IntSet): IntList {
         val ngramArray = ngrams.toIntArray()
         val freq = df ?: return IntArrayList.wrap(ngramArray)

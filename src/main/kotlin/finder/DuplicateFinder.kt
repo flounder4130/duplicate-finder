@@ -20,6 +20,7 @@ class DuplicateFinder(private val options: DuplicateFinderOptions) {
 
     fun run(): DuplicateFinderReport {
         val indexDuration = measureTime { index.indexDirectory(); index.computeDocFrequencies() }
+        index.trim()
         val (duplicates, findDuration) = measureTimedValue { findAll(index) }
 
         return DuplicateFinderReport(
