@@ -39,10 +39,11 @@ fun findForChunk(
     val minLength = length - margin
     val maxLength = length + margin
     val thisNgramsOrdered = index.orderByFrequency(index.ngramProvider.ngrams(referenceChunk.content))
+    val scores = Int2IntOpenHashMap()
     return buildList {
         (minLength..maxLength).forEach { length ->
             val indexForLength = index.bucketForLength(length) ?: return@forEach
-            val resultsForLength = findForChunk(referenceChunk, thisNgramsOrdered, indexForLength, index, options)
+            val resultsForLength = findForChunk(referenceChunk, thisNgramsOrdered, indexForLength, index, options, scores)
             addAll(resultsForLength)
         }
     }
@@ -53,10 +54,11 @@ private fun findForChunk(
     thisNgrams: IntList,
     ngramBucket: Int2ObjectOpenHashMap<IntArrayList>,
     index: Index,
-    options: DuplicateFinderOptions
+    options: DuplicateFinderOptions,
+    scores: Int2IntOpenHashMap
 ): List<Chunk> {
     val ngramProvider = index.ngramProvider
-    val scores = Int2IntOpenHashMap()
+    scores.clear()
     val minScoreFilter = (thisNgrams.size * options.minSimilarity).toInt()
     var currentMaxScore = 0
     val referenceId = index.chunkId(referenceChunk)
