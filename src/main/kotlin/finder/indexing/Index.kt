@@ -3,6 +3,7 @@ package finder.indexing
 import finder.*
 import finder.ngram.ngramProvider
 import it.unimi.dsi.fastutil.ints.*
+import it.unimi.dsi.fastutil.longs.LongArrays
 import it.unimi.dsi.fastutil.objects.*
 import java.nio.file.*
 import java.util.concurrent.ConcurrentHashMap
@@ -57,10 +58,19 @@ class Index(val options: DuplicateFinderOptions) {
     }
 
     fun orderByFrequency(ngrams: IntSet): IntList {
-        val arr = ngrams.toIntArray()
-        val freq = df ?: return IntArrayList.wrap(arr)
-        IntArrays.quickSort(arr) { a, b -> freq.get(a) - freq.get(b) }
-        return IntArrayList.wrap(arr)
+        val ngramArray = ngrams.toIntArray()
+        val freq = df ?: return IntArrayList.wrap(ngramArray)
+        val packed = LongArray(ngramArray.size)
+        for (i in ngramArray.indices) {
+            val g = ngramArray[i]
+            packed[i] = (freq.get(g).toLong() shl 32) or (g.toLong() and 0xFFFFFFFFL)
+        }
+        LongArrays.quickSort(packed)
+        val result = IntArrayList(packed.size)
+        for (i in packed.indices) {
+            result.add((packed[i] and 0xFFFFFFFFL).toInt())
+        }
+        return result
     }
 
     fun getForLength(length: Int): Int2ObjectOpenHashMap<IntArrayList> =
