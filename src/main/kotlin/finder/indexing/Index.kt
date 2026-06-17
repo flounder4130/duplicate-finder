@@ -66,6 +66,8 @@ class Index(val options: DuplicateFinderOptions) {
     fun getForLength(length: Int): Int2ObjectOpenHashMap<IntArrayList> =
         directoryIndex.computeIfAbsent(length) { Int2ObjectOpenHashMap<IntArrayList>() }
 
+    fun bucketForLength(length: Int): Int2ObjectOpenHashMap<IntArrayList>? = directoryIndex[length]
+
     fun removeChunksForPath(path: String) {
         directoryIndex.values.forEach { ngramMap ->
             synchronized(ngramMap) {

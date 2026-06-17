@@ -41,7 +41,7 @@ fun findForChunk(
     val thisNgramsOrdered = index.orderByFrequency(index.ngramProvider.ngrams(referenceChunk.content))
     return buildList {
         (minLength..maxLength).forEach { length ->
-            val indexForLength = index.getForLength(length)
+            val indexForLength = index.bucketForLength(length) ?: return@forEach
             val resultsForLength = findForChunk(referenceChunk, thisNgramsOrdered, indexForLength, index, options)
             addAll(resultsForLength)
         }
