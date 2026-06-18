@@ -4,7 +4,7 @@ import finder.ngram.ComputeNgramProvider
 import finder.similarity.similarityRatio
 import org.junit.jupiter.api.Test
 
-val ngramProvider = ComputeNgramProvider.getInstance(3)
+val ngramProvider = ComputeNgramProvider(3)
 val oneNgram = ngramProvider.ngrams("123")
 val twoNgram = ngramProvider.ngrams("1234")
 val threeNgram = ngramProvider.ngrams("12345")
