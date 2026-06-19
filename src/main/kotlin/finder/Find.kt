@@ -85,6 +85,7 @@ private fun findForChunk(
             val score = entry.intValue
             if (score < minScoreFilter) return@fastForEach
             val candidate = index.chunkForId(entry.intKey)
+            if (referenceChunk.overlaps(candidate)) return@fastForEach
             val maxNgrams = max(ngramProvider.ngrams(candidate.content).size, thisNgrams.size)
             if (similarityRatio(score, maxNgrams) >= options.minSimilarity) {
                 add(candidate)

@@ -8,7 +8,7 @@ fun parser(options: DuplicateFinderOptions, path: Path): ContentParser = when (o
     FILE        -> FileParser()
     LINE        -> LineParser()
     MARKDOWN    -> MarkdownParser()
-    XML         -> XmlParser(options.inlineNested)
+    XML         -> XmlParser(options.inlineNested, captureOffsets = true)
     ASCIIDOC    -> AsciiDocParser()
     PROPERTIES  -> JavaPropertiesParser()
 }

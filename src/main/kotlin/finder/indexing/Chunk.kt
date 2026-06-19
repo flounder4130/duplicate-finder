@@ -9,6 +9,8 @@ abstract class Chunk(
     val preview: String
         get() = if (content.length > 15) "$this – ${content.substring(0, 15)}..." else "$this – $content"
 
+    fun overlaps(other: Chunk): Boolean = path == other.path && coordinates.intersects(other.coordinates)
+
     override fun toString(): String {
         return "$path:$coordinates"
     }
