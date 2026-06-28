@@ -11,7 +11,7 @@ fun similarityRatio(ngramsLeft: Set<Int>, ngramsRight: Set<Int>): Double {
     return similarityRatio(intersection.size, max)
 }
 
-fun similarityRatio(intersection: Int, max: Int): Double = intersection.toDouble() / max
+fun similarityRatio(intersection: Int, max: Int): Double = if (max == 0) 0.0 else intersection.toDouble() / max
 
 fun Chunk.similarity(other: Chunk, options: DuplicateFinderOptions): Int {
     val ngramProvider = ngramProvider(options)
