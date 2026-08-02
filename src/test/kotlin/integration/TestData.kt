@@ -5,7 +5,6 @@ import java.nio.file.*
 import kotlin.io.path.*
 
 const val WORDS_FILE = "./src/test/resources/words"
-const val TEST_DATA_DIR = "./test_data"
 const val NUM_TEST_FILES = 100
 const val LINES_PER_FILE = 100
 const val WORDS_PER_LINE = 20
@@ -24,8 +23,8 @@ val fuzzyMatches = listOf(
 )
 
 fun generateTestData(
+    outputDir: Path,
     wordsFile: String = WORDS_FILE,
-    outputDir: String = TEST_DATA_DIR,
     numOutputFiles: Int = NUM_TEST_FILES,
     linesPerFile: Int = LINES_PER_FILE,
     wordsPerLine: Int = WORDS_PER_LINE,
@@ -35,7 +34,7 @@ fun generateTestData(
         .filter { it.isNotEmpty() }
 
     repeat(numOutputFiles) { fileIndex ->
-        val outputFile = Path.of(outputDir).resolve("test_data_${fileIndex + 1}")
+        val outputFile = outputDir.resolve("test_data_${fileIndex + 1}")
         val fileContent = StringBuilder().apply {
             repeat(linesPerFile) {
                 val line = (1..wordsPerLine).joinToString(" ") { words.random() }
@@ -47,8 +46,8 @@ fun generateTestData(
     }
 }
 
-fun injectDuplicates(testDataDir: String) {
-    Files.list(Path.of(testDataDir)).toList().apply {
+fun injectDuplicates(testDataDir: Path) {
+    Files.list(testDataDir).use { it.toList() }.apply {
         random().also { println("Exact match 1 inserted in file: ${it.fileName}") }.appendText("$EXACT_MATCH\n")
         random().also { println("Exact match 2 inserted in file: ${it.fileName}") }.appendText("$EXACT_MATCH\n")
         fuzzyMatches.forEach { random().appendText("$it\n") }
