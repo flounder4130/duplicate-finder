@@ -9,7 +9,7 @@ import java.util.stream.Collectors
 import kotlin.collections.*
 import kotlin.math.max
 
-fun findAll(index: Index): Map<Chunk, List<Chunk>> {
+internal fun findAll(index: Index): Map<Chunk, List<Chunk>> {
     val options = index.options
     val chunksFlat = index.chunksFlat()
     val processedChunksCount = AtomicInteger(0)
@@ -29,7 +29,7 @@ fun findAll(index: Index): Map<Chunk, List<Chunk>> {
         .filter { it.value.size >= options.minDuplicates.coerceAtLeast(1) }
 }
 
-fun findForChunk(
+internal fun findForChunk(
     referenceChunk: Chunk,
     index: Index,
     options: DuplicateFinderOptions = index.options,
@@ -84,7 +84,7 @@ private fun findForChunk(
         scores.int2IntEntrySet().fastForEach { entry ->
             val score = entry.intValue
             if (score < minScoreFilter) return@fastForEach
-            val candidate = index.chunkForId(entry.intKey)
+            val candidate = index.chunkForId(entry.intKey) ?: return@fastForEach
             if (referenceChunk.overlaps(candidate)) return@fastForEach
             val maxNgrams = max(ngramProvider.ngrams(candidate.content).size, thisNgrams.size)
             if (similarityRatio(score, maxNgrams) >= options.minSimilarity) {

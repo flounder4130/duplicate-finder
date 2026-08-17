@@ -99,7 +99,7 @@ class TextSearchDialog(
 
     private fun refresh() {
         val searchChunk = queryPane.text.toChunk()
-        val results = findForChunk(searchChunk, index, options.withMinSimilarity(similaritySlider.value / 100.0))
+        val results = index.duplicatesOf(searchChunk, options.withMinSimilarity(similaritySlider.value / 100.0))
         queryPane.document = heatMapDocument(searchChunk, results, options)
         resultsListModel.clear()
         resultsListModel.addAll(results)

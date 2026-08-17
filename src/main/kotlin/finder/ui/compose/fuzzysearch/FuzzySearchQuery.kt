@@ -9,7 +9,6 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.*
-import finder.findForChunk
 import finder.indexing.*
 import finder.ui.compose.*
 
@@ -59,9 +58,8 @@ fun ColumnScope.FuzzySearchQuery(
             onClick = {
                 if (queryText.value.isNotEmpty()) {
                     val searchChunk = LineChunk(queryText.value, "", LineCoordinates(0))
-                    results.value = findForChunk(
+                    results.value = index.duplicatesOf(
                         searchChunk,
-                        index,
                         options.withMinSimilarity(minSimilarity.value)
                     )
                 }
