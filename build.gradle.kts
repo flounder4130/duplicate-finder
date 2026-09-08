@@ -1,77 +1,25 @@
-import org.gradle.api.tasks.bundling.Jar
-import java.net.URL
-import java.io.File
-
 plugins {
-    kotlin("jvm")
-    id("org.jetbrains.compose")
-    id("org.jetbrains.kotlin.plugin.compose")
+    base
+    kotlin("jvm") apply false
+    id("org.jetbrains.compose") apply false
+    id("org.jetbrains.kotlin.plugin.compose") apply false
 }
 
-group = "dev.flounder"
-version = "1.0"
-
-repositories {
-    mavenCentral()
-    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
-    google()
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-    implementation("org.commonmark:commonmark:0.22.0")
-    implementation("it.unimi.dsi:fastutil:8.5.15")
-    implementation("commons-cli:commons-cli:1.5.0")
-    implementation(compose.desktop.currentOs)
-    implementation(compose.material3)
-}
-
-tasks {
-    test {
-        useJUnitPlatform()
-    }
-
-    task("fatJar", type = Jar::class) {
-        group = "build"
-        description = "Assembles a fat JAR containing the main classes and all dependencies"
-        archiveFileName.set("duplicate-finder.jar")
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-        manifest { attributes["Main-Class"] = "finder.DuplicateFinderKt" }
-
-        from(sourceSets.main.get().output)
-
-        dependsOn(configurations.runtimeClasspath)
-        from({
-            configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
-        })
-    }
-
-    jar {
-        manifest {
-            attributes["Main-Class"] = "finder.DuplicateFinderKt"
-        }
-    }
-
-    register("downloadWordsList") {
-        val source = "https://www.mit.edu/~ecprice/wordlist.10000"
-        group = "verification"
-        description = "Downloads words for generating test data from $source and places it under ./src/test/resources"
-
-        doLast {
-            val file = File("./src/test/resources/words")
-
-            URL(source).openStream().use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            println("File downloaded to: ${file.absolutePath}")
-        }
+allprojects {
+    group = "dev.flounder"
+    version = "1.0"
+    repositories {
+        mavenCentral()
+        google()
     }
 }
 
-kotlin {
-    jvmToolchain(21)
+tasks.register("test") { dependsOn(":core:test", ":app:test", ":example-client:test") }
+tasks.named("check") { dependsOn("test") }
+tasks.named("assemble") { dependsOn(":core:assemble", ":app:assemble", ":example-client:assemble") }
+tasks.register<Copy>("fatJar") {
+    dependsOn(":app:fatJar")
+    from(project(":app").layout.buildDirectory.file("libs/duplicate-finder.jar"))
+    into(layout.buildDirectory.dir("libs"))
 }
+tasks.register("downloadWordsList") { dependsOn(":app:downloadWordsList") }

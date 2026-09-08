@@ -14,3 +14,4 @@ pluginManagement {
 }
 
 rootProject.name = "duplicate-finder"
+include(":core", ":app", ":example-client")
