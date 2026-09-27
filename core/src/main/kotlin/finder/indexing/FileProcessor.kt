@@ -30,7 +30,7 @@ internal class FileProcessor(val options: DuplicateFinderOptions) {
                 chunk is FileChunk -> TextRange(0, content.length)
                 chunk is XmlChunk && coordinates is OffsetCoordinates && xmlOffsets != null ->
                     TextRange(xmlOffsets[coordinates.start], xmlOffsets[coordinates.end])
-                else -> null
+                else -> chunk.sourceRange
             }
             if (!options.keepWhitespace) chunk.content = normalizeWhitespace(chunk.content)
         }.filter { it.content.length >= options.minLength }

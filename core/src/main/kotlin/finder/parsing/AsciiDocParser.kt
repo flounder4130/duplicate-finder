@@ -16,6 +16,15 @@ internal class AsciiDocParser : ContentParser() {
         fun addBlock(content: String, startLine: Int, blockType: String): Boolean =
             chunks.add(AsciiDocChunk(content, path, LineCoordinates(startLine), blockType))
 
+        fun processCodeBlock() {
+            if (currentBlock.isEmpty()) return
+            val codeContent = currentBlock.joinToString("\n") { it.first }
+            if (codeContent.isNotBlank()) {
+                addBlock(codeContent, currentBlock.first().second, "listing")
+            }
+            currentBlock.clear()
+        }
+
         fun processCurrentBlock() {
             if (currentBlock.isEmpty()) return
 
@@ -50,12 +59,13 @@ internal class AsciiDocParser : ContentParser() {
                         val lines = content.lines()
                         var currentParagraph = mutableListOf<String>()
                         var currentLineNumber = startLine
+                        var paragraphStartLine = startLine
 
                         lines.forEach { line ->
                             if (line.trim().startsWith("* ")) {
                                 // If we have accumulated paragraph content, add it first
                                 if (currentParagraph.isNotEmpty()) {
-                                    addBlock(currentParagraph.joinToString("\n"), currentLineNumber, "paragraph")
+                                    addBlock(currentParagraph.joinToString("\n"), paragraphStartLine, "paragraph")
                                     currentParagraph.clear()
                                 }
                                 // Add the list item
@@ -64,6 +74,7 @@ internal class AsciiDocParser : ContentParser() {
                                     addBlock(itemContent, currentLineNumber, "list_item")
                                 }
                             } else {
+                                if (currentParagraph.isEmpty()) paragraphStartLine = currentLineNumber
                                 currentParagraph.add(line)
                             }
                             currentLineNumber++
@@ -71,7 +82,7 @@ internal class AsciiDocParser : ContentParser() {
 
                         // Add any remaining paragraph content
                         if (currentParagraph.isNotEmpty()) {
-                            addBlock(currentParagraph.joinToString("\n"), startLine, "paragraph")
+                            addBlock(currentParagraph.joinToString("\n"), paragraphStartLine, "paragraph")
                         }
                     }
                 }
@@ -81,6 +92,12 @@ internal class AsciiDocParser : ContentParser() {
 
         lines.forEachIndexed { lineNumber, line ->
             when {
+                line == "----" -> {
+                    if (inCodeBlock) processCodeBlock() else processCurrentBlock()
+                    inCodeBlock = !inCodeBlock
+                }
+                // Listing content is literal, even if it resembles document markup.
+                inCodeBlock -> currentBlock.add(line to (lineNumber + 1))
                 line.startsWith(".") -> {
                     processCurrentBlock()
                     addBlock(line.removePrefix(".").trim(), lineNumber + 1, "table_title")
@@ -89,16 +106,6 @@ internal class AsciiDocParser : ContentParser() {
                     processCurrentBlock()
                     inTable = !inTable
                     tableHeader = true
-                }
-                line == "----" -> {
-                    if (inCodeBlock) {
-                        val codeContent = currentBlock.joinToString("\n") { it.first }
-                        if (codeContent.isNotEmpty()) {
-                            addBlock(codeContent, currentBlock.first().second, "listing")
-                        }
-                        currentBlock.clear()
-                    }
-                    inCodeBlock = !inCodeBlock
                 }
                 inTable && line.trim().isNotEmpty() -> {
                     if (tableHeader) {
@@ -139,7 +146,6 @@ internal class AsciiDocParser : ContentParser() {
                         }
                     }
                 }
-                inCodeBlock -> currentBlock.add(line to (lineNumber + 1))
                 line.trim().isEmpty() -> processCurrentBlock()
                 line.startsWith("[source") -> {
                     processCurrentBlock()
@@ -148,7 +154,7 @@ internal class AsciiDocParser : ContentParser() {
             }
         }
 
-        processCurrentBlock()
+        if (inCodeBlock) processCodeBlock() else processCurrentBlock()
         return chunks
     }
 }
